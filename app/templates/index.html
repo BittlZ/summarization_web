@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Веб-приложение суммаризации текста</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Суммаризация текста</h1>
+    <form id="summarizeForm">
+        <textarea id="inputText" rows="10" cols="50" placeholder="Введите текст здесь..."></textarea><br>
+        <button type="submit">Суммировать</button>
+    </form>
+    <h2>Результат</h2>
+    <p id="summaryOutput"></p>
+
+    <script>
+        document.getElementById('summarizeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            let text = document.getElementById('inputText').value;
+            let response = await fetch('/summarize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            });
+            let result = await response.json();
+            document.getElementById('summaryOutput').innerText = result.summary;
+        });
+    </script>
+</body>
+</html>
