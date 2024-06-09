@@ -4,7 +4,7 @@ from sumy.nlp.stemmers import Stemmer
 from sumy.utils import get_stop_words
 from sumy.summarizers.lsa import LsaSummarizer
 from sumy.summarizers.lex_rank import LexRankSummarizer
-from tokenizer import tokenize_sentences, calculate_sentence_importance, extract_keywords, save_word_weights, load_word_weights
+from .tokenizer import tokenize_sentences, calculate_sentence_importance, extract_keywords, save_word_weights, load_word_weights
 import os
 
 LANGUAGE = "russian"
