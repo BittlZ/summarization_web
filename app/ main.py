@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QPushButton, QTextEdit, QVBoxLayout, QComboBox, QHBoxLayout, QFileDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QPushButton, QTextEdit, QVBoxLayout, QComboBox, QHBoxLayout, QFileDialog, QLineEdit, QLabel
 from PyQt5.QtGui import QIcon
 import sys
 
@@ -30,6 +30,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.initUI()
+        self.word_weights_path = None
 
     def initUI(self):
         self.setWindowTitle('Summarizer')
@@ -38,6 +39,12 @@ class MainWindow(QMainWindow):
 
         self.download_file_button = QPushButton('Upload file', self)
         self.download_file_button.clicked.connect(self.download_file_button_click)
+
+        self.upload_weights_button = QPushButton('Upload word weights', self)
+        self.upload_weights_button.clicked.connect(self.upload_weights_button_click)
+
+        self.num_sentences_input = QLineEdit(self)
+        self.num_sentences_input.setPlaceholderText("Number of sentences")
 
         self.list_refering_methods = QComboBox(self)
         self.list_refering_methods.addItems(["lsa", "luhn", "lexrank"])
@@ -59,7 +66,8 @@ class MainWindow(QMainWindow):
 
         button_list_layout = QHBoxLayout()
         button_list_layout.addWidget(self.download_file_button)
-        button_list_layout.addSpacing(240)
+        button_list_layout.addWidget(self.upload_weights_button)
+        button_list_layout.addWidget(self.num_sentences_input)
         button_list_layout.addWidget(self.list_refering_methods)
         button_list_layout.addWidget(self.start_button)
 
@@ -78,8 +86,12 @@ class MainWindow(QMainWindow):
         input_text = self.request_text_frame.toPlainText()
         if input_text:
             selected_variant_of_refering_methods = self.list_refering_methods.currentText()
-            num_sentences = SENTENCES_COUNT
-            summary = sumy_algorithm.summarize_text(input_text, num_sentences, selected_variant_of_refering_methods)
+            try:
+                num_sentences = int(self.num_sentences_input.text())
+            except ValueError:
+                num_sentences = SENTENCES_COUNT
+
+            summary = sumy_algorithm.summarize_text(input_text, num_sentences, selected_variant_of_refering_methods, self.word_weights_path)
             if summary:  # Проверка на наличие результата
                 for sentence in summary:
                     self.answer_text_frame.append(str(sentence))
@@ -101,6 +113,12 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 self.answer_text_frame.clear()
                 self.answer_text_frame.append("Error loading file: " + str(e))
+
+    def upload_weights_button_click(self):
+        options = QFileDialog.Options()
+        fileName, _ = QFileDialog.getOpenFileName(self, "Open JSON File", "", "JSON Files (*.json);;All Files (*)", options=options)
+        if fileName:
+            self.word_weights_path = fileName
 
     def answer_download_button_click(self):
         options = QFileDialog.Options()
