@@ -1,13 +1,21 @@
+import os
 from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.nlp.stemmers import Stemmer
-from sumy.utils import get_stop_words
 from sumy.summarizers.lsa import LsaSummarizer
 from sumy.summarizers.lex_rank import LexRankSummarizer
+from sumy.utils import get_stop_words
 from .tokenizer import tokenize_sentences, calculate_sentence_importance, extract_keywords, save_word_weights, load_word_weights
-import os
 
 LANGUAGE = "russian"
+
+def load_stop_words(language):
+    if language == "russian":
+        stopwords_file = os.path.join(os.path.dirname(__file__), "russian.txt")
+        with open(stopwords_file, "r", encoding="utf-8") as f:
+            return [line.strip() for line in f]
+    else:
+        return get_stop_words(language)
 
 def luhn_summarizer(text, num_sentences, word_weights_path=None):
     sentences = tokenize_sentences(text)
@@ -28,11 +36,13 @@ def luhn_summarizer(text, num_sentences, word_weights_path=None):
 
 def summarize_text(text, num_sentences, summarizer_type, word_weights_path=None):
     try:
+        print(f"Summarizing text with method: {summarizer_type}")
+        stop_words = load_stop_words(LANGUAGE)
         if summarizer_type.lower() == "lsa":
             parser = PlaintextParser.from_string(text, Tokenizer(LANGUAGE))
             stemmer = Stemmer(LANGUAGE)
             summarizer = LsaSummarizer(stemmer)
-            summarizer.stop_words = get_stop_words(LANGUAGE)
+            summarizer.stop_words = stop_words
             summary = summarizer(parser.document, num_sentences)
             return summary
         elif summarizer_type.lower() == "luhn":
@@ -40,7 +50,7 @@ def summarize_text(text, num_sentences, summarizer_type, word_weights_path=None)
         elif summarizer_type.lower() == "lexrank":
             parser = PlaintextParser.from_string(text, Tokenizer(LANGUAGE))
             summarizer = LexRankSummarizer()
-            summarizer.stop_words = get_stop_words(LANGUAGE)
+            summarizer.stop_words = stop_words
             summary = summarizer(parser.document, num_sentences)
             return summary
         else:

@@ -7,24 +7,68 @@
 </head>
 <body>
     <h1>Суммаризация текста</h1>
+    <form id="uploadForm">
+        <input type="file" id="fileInput">
+        <button type="submit">Загрузить файл</button>
+    </form>
+    <form id="uploadWeightsForm">
+        <input type="file" id="weightsInput">
+        <button type="submit">Загрузить веса слов</button>
+    </form>
     <form id="summarizeForm">
         <textarea id="inputText" rows="10" cols="50" placeholder="Введите текст здесь..."></textarea><br>
+        <input type="number" id="numSentences" placeholder="Количество предложений" value="1" min="1">
+        <select id="methodSelect">
+            <option value="lsa">LSA</option>
+            <option value="luhn">Luhn</option>
+            <option value="lexrank">LexRank</option>
+        </select>
         <button type="submit">Суммировать</button>
     </form>
+    
     <h2>Результат</h2>
     <p id="summaryOutput"></p>
 
     <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            let fileInput = document.getElementById('fileInput');
+            let formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            let response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+            let result = await response.json();
+            document.getElementById('inputText').value = result.text;
+        });
+
+        document.getElementById('uploadWeightsForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            let weightsInput = document.getElementById('weightsInput');
+            let formData = new FormData();
+            formData.append('file', weightsInput.files[0]);
+            let response = await fetch('/upload_weights', {
+                method: 'POST',
+                body: formData
+            });
+            let result = await response.json();
+            document.getElementById('weightsInput').dataset.weightsPath = result.weights_path;
+        });
+
         document.getElementById('summarizeForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             let text = document.getElementById('inputText').value;
+            let numSentences = document.getElementById('numSentences').value;
+            let method = document.getElementById('methodSelect').value;
+            let weightsPath = document.getElementById('weightsInput').dataset.weightsPath || null;
             let response = await fetch('/summarize', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: text })
+                body: JSON.stringify({ text: text, num_sentences: numSentences, method: method, weights_path: weightsPath })
             });
             let result = await response.json();
-            document.getElementById('summaryOutput').innerText = result.summary;
+            document.getElementById('summaryOutput').innerText = result.summary.join(' ');
         });
     </script>
 </body>
